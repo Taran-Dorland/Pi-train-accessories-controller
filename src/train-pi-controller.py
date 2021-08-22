@@ -10,16 +10,50 @@ from PIL import Image, ImageDraw, ImageFont
 import adafruit_ssd1306
 import atexit
 
+#----------------------------------------------------------------
+# Handle application shutdown
+
 def cleanExit():
+    # Clear PiOLED display
     draw.rectangle((0, 0, width, height), outline=0, fill=0)
     display.image(image)
     display.show()
+    # Cleanup RPi GPIO
     GPIO.cleanup()
 
 #----------------------------------------------------------------
+# GPIO Layout: https://pinout.xyz/
 # Handle RPi.GPIO
 
+# Each of these board pinouts maps to an Arduino Nano that will
+# toggle the LEDs controlled by that Arduino
+ARD1_IN = 14
+ARD2_IN = 15
+ARD3_IN = 18
 
+ARD1_OUT = 17
+ARD2_OUT = 27
+ARD3_OUT = 22
+
+GPIO.setmode(GPIO.BCM)
+GPIO.setup([ARD1_IN, ARD2_IN, ARD3_IN], GPIO.IN)
+GPIO.setup([ARD1_OUT, ARD2_OUT, ARD3_OUT], GPIO.OUT)
+
+# Handles turning lights on
+def lightsOn():
+
+    GPIO.output([ARD1_OUT, ARD2_OUT, ARD3_OUT], GPIO.HIGH)
+
+    print("Lights toggle: ON", file=sys.stderr)
+    updateDisplay("Toggle: ON")
+
+# Handles turning lights off
+def lightsOff():
+
+    GPIO.output([ARD1_OUT, ARD2_OUT, ARD3_OUT], GPIO.LOW)
+
+    print("Lights toggle: OFF", file=sys.stderr)
+    updateDisplay("Toggle: OFF")
 
 #----------------------------------------------------------------
 # Handle PiOLED
@@ -43,20 +77,14 @@ bottom = height - padding
 x = 0
 
 font = ImageFont.load_default()
+
+# Setup atexit
 atexit.register(cleanExit)
 
-# Update screen showing lights have been turned on
-def turnOn():
+# Update screen
+def updateDisplay(textToDisplay):
     draw.rectangle((0, 0, width, height), outline=0, fill=0)
-    draw.text((x, top + 0), "Toggle: ON", font=font, fill=255)
-    display.image(image)
-    display.show()
-    time.sleep(0.1)
-
-# Update screen showing lights have been turned off
-def turnOff():
-    draw.rectangle((0, 0, width, height), outline=0, fill=0)
-    draw.text((x, top + 0), "Toggle: OFF", font=font, fill=255)
+    draw.text((x, top + 0), textToDisplay, font=font, fill=255)
     display.image(image)
     display.show()
     time.sleep(0.1)
@@ -72,10 +100,10 @@ def hello():
     if request.method == 'POST':
         if request.form['submit_button'] == '0':
             print("Turn on.", file=sys.stderr)
-            turnOn()
+            lightsOn()
         elif request.form['submit_button'] == '1':
             print("Turn off.", file=sys.stderr)
-            turnOff()
+            lightsOff()
     
     return render_template('index.html')
 
