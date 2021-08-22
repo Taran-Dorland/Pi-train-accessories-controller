@@ -18,9 +18,11 @@ A controller to manage LED's and other automations for a model railroad easily i
 
 1. Install required packages
 `python -m pip install -r requirements.txt`
+
 2. Setup flask environment
 `export FLASK_APP=src/testflask`
 `export FLASK_ENV=development`
+
 3. - To access on local computer
    `flask run`
    - To access over local network
