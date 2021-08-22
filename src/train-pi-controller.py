@@ -8,6 +8,13 @@ from board import SCL, SDA
 import busio
 from PIL import Image, ImageDraw, ImageFont
 import adafruit_ssd1306
+import atexit
+
+def cleanExit():
+    draw.rectangle((0, 0, width, height), outline=0, fill=0)
+    display.image(image)
+    display.show()
+    GPIO.cleanup()
 
 #----------------------------------------------------------------
 # Handle RPi.GPIO
@@ -36,8 +43,9 @@ bottom = height - padding
 x = 0
 
 font = ImageFont.load_default()
+atexit.register(cleanExit)
 
-# Turn on lights
+# Update screen showing lights have been turned on
 def turnOn():
     draw.rectangle((0, 0, width, height), outline=0, fill=0)
     draw.text((x, top + 0), "Toggle: ON", font=font, fill=255)
@@ -45,7 +53,7 @@ def turnOn():
     display.show()
     time.sleep(0.1)
 
-# Turn off lights
+# Update screen showing lights have been turned off
 def turnOff():
     draw.rectangle((0, 0, width, height), outline=0, fill=0)
     draw.text((x, top + 0), "Toggle: OFF", font=font, fill=255)
