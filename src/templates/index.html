@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename= 'css/style.css') }}">
+    <title>TestFlask</title>
+</head>
+<body>
+    <h1>Test H1</h1>
+    <form method="post" action="/">
+        <input type="submit" name="submit_button" value="0">
+        <input type="submit" name="submit_button" value="1">
+    </form>
+</body>
+
+<script type="text/javascript" src="{{ url_for('static', filename= 'js/jquery-3.6.0.min.js') }}"></script>
+
+</html>
