@@ -9,6 +9,9 @@ import busio
 from PIL import Image, ImageDraw, ImageFont
 import adafruit_ssd1306
 import atexit
+import json
+
+import getTrainInfo as TrainInfo
 
 #----------------------------------------------------------------
 # Handle application shutdown
@@ -20,6 +23,7 @@ def cleanExit():
     display.show()
     # Cleanup RPi GPIO
     GPIO.cleanup()
+    print("Clean exit.")
 
 #----------------------------------------------------------------
 # GPIO Layout: https://pinout.xyz/
@@ -54,6 +58,11 @@ def lightsOff():
 
     print("Lights toggle: OFF", file=sys.stderr)
     updateDisplay("Toggle: OFF")
+
+
+# 0 == Closed == Red; 1 == Thrown == Green
+def rgbLight(val):
+    GPIO.output(ARD1_OUT, val)
 
 #----------------------------------------------------------------
 # Handle PiOLED
@@ -90,6 +99,22 @@ def updateDisplay(textToDisplay):
     time.sleep(0.1)
 
 #----------------------------------------------------------------
+# Logic
+
+# Check if given turnout is thrown/closed
+def checkTurnout(turnoutNum, turnoutData):
+    val = turnoutData[turnoutNum]["data"]["state"]
+
+    #2 == Closed turnout; 4 == Thrown turnout
+    if val == 2:
+        updateDisplay("Turnout[{0}]: Closed".format(turnoutNum))
+        rgbLight(0)
+    else:
+        updateDisplay("Turnout[{0}]: Thrown".format(turnoutNum))
+        rgbLight(1)
+
+
+#----------------------------------------------------------------
 # Flask app
 
 app = Flask(__name__)
@@ -104,6 +129,8 @@ def hello():
         elif request.form['submit_button'] == '1':
             print("Turn off.", file=sys.stderr)
             lightsOff()
+        elif request.form['submit_button'] == '2':
+            checkTurnout(0, TrainInfo.getTurnouts())
     
     return render_template('index.html')
 
