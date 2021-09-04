@@ -2,18 +2,28 @@
 <html lang="en">
 <head>
 
+    <link rel="stylesheet" href="{{ url_for('static', filename= 'css/bootstrap-grid.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename= 'css/bootstrap-reboot.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename= 'css/bootstrap-utilities.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename= 'css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename= 'css/style.css') }}">
     <title>Pi Controller</title>
 </head>
 <body>
     <h1>Test H1</h1>
-    <form method="post" action="/">
-        <input type="submit" name="submit_button" value="0">
-        <input type="submit" name="submit_button" value="1">
-        <input type="submit" name="submit_button" value="2">
+    <form method="POST" action="/">
+        <div class="form-group">
+            <button type="submit" class="btn btn-primary" name="submit_button" value="0">Lights On</button>
+            <button type="submit" class="btn btn-primary" name="submit_button" value="1">Lights Off</button>
+            <button type="submit" class="btn btn-primary" name="submit_button" value="2">Check Turnouts</button>
+        </div>
     </form>
 </body>
 
+<script type="text/javascript" src="{{ url_for('static', filename= 'js/bootstrap.bundle.min.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename= 'js/bootstrap.esm.min.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename= 'js/bootstrap.min.js') }}"></script>
 <script type="text/javascript" src="{{ url_for('static', filename= 'js/jquery-3.6.0.min.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename= 'js/test.js') }}"></script>
 
 </html>
