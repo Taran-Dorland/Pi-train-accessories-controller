@@ -38,31 +38,32 @@ ARD3_IN = 18
 ARD1_OUT = 17
 ARD2_OUT = 27
 ARD3_OUT = 22
+ARD4_OUT = 10
+
+ARD_OUTS = [ARD1_OUT, ARD2_OUT, ARD3_OUT, ARD4_OUT]
 
 GPIO.setmode(GPIO.BCM)
 GPIO.setup([ARD1_IN, ARD2_IN, ARD3_IN], GPIO.IN)
-GPIO.setup([ARD1_OUT, ARD2_OUT, ARD3_OUT], GPIO.OUT)
+GPIO.setup([ARD1_OUT, ARD2_OUT, ARD3_OUT, ARD4_OUT], GPIO.OUT)
 
 # Handles turning lights on
 def lightsOn():
-
-    GPIO.output([ARD1_OUT, ARD2_OUT, ARD3_OUT], GPIO.HIGH)
-
+    draw.rectangle((0, 0, width, height), outline=0, fill=0)
+    GPIO.output(ARD_OUTS, GPIO.HIGH)
     print("Lights toggle: ON", file=sys.stderr)
     updateDisplay("Toggle: ON")
 
 # Handles turning lights off
 def lightsOff():
-
-    GPIO.output([ARD1_OUT, ARD2_OUT, ARD3_OUT], GPIO.LOW)
-
+    draw.rectangle((0, 0, width, height), outline=0, fill=0)
+    GPIO.output(ARD_OUTS, GPIO.LOW)
     print("Lights toggle: OFF", file=sys.stderr)
     updateDisplay("Toggle: OFF")
 
 
 # 0 == Closed == Red; 1 == Thrown == Green
-def rgbLight(val):
-    GPIO.output(ARD1_OUT, val)
+def rgbLightToggle(pin, val):
+    GPIO.output(pin, val)
 
 #----------------------------------------------------------------
 # Handle PiOLED
@@ -91,9 +92,9 @@ font = ImageFont.load_default()
 atexit.register(cleanExit)
 
 # Update screen
-def updateDisplay(textToDisplay):
-    draw.rectangle((0, 0, width, height), outline=0, fill=0)
-    draw.text((x, top + 0), textToDisplay, font=font, fill=255)
+def updateDisplay(textToDisplay, topAdd=0):
+    #draw.rectangle((0, 0, width, height), outline=0, fill=0)
+    draw.text((x, top + topAdd), textToDisplay, font=font, fill=255)
     display.image(image)
     display.show()
     time.sleep(0.1)
@@ -102,16 +103,16 @@ def updateDisplay(textToDisplay):
 # Logic
 
 # Check if given turnout is thrown/closed
-def checkTurnout(turnoutNum, turnoutData):
-    val = turnoutData[turnoutNum]["data"]["state"]
+def checkTurnout(turnoutNum, turnoutData, pinout, screenTop=0):
+    val = turnoutData["data"]["state"]
 
     #2 == Closed turnout; 4 == Thrown turnout
     if val == 2:
-        updateDisplay("Turnout[{0}]: Closed".format(turnoutNum))
-        rgbLight(0)
+        updateDisplay("Turnout[{0}]: Closed".format(turnoutNum), screenTop)
+        rgbLightToggle(pinout, 0)
     else:
-        updateDisplay("Turnout[{0}]: Thrown".format(turnoutNum))
-        rgbLight(1)
+        updateDisplay("Turnout[{0}]: Thrown".format(turnoutNum), screenTop)
+        rgbLightToggle(pinout, 1)
 
 
 #----------------------------------------------------------------
@@ -130,7 +131,10 @@ def hello():
             print("Turn off.", file=sys.stderr)
             lightsOff()
         elif request.form['submit_button'] == '2':
-            checkTurnout(0, TrainInfo.getTurnouts())
+            draw.rectangle((0, 0, width, height), outline=0, fill=0)
+            turnoutData = TrainInfo.getTurnouts()
+            for i in range(4):
+                checkTurnout(i, turnoutData[i], ARD_OUTS[i], i*8)
     
     return render_template('index.html')
 
