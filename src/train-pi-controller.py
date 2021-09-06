@@ -1,17 +1,21 @@
+from asyncio.events import get_event_loop
 import sys
 from adafruit_framebuf import BitmapFont
 from flask import Flask, render_template, request
-from flask.wrappers import Request
 import time
 import RPi.GPIO as GPIO
 from board import SCL, SDA
 import busio
 from PIL import Image, ImageDraw, ImageFont
 import adafruit_ssd1306
-import atexit
+import atexit, threading
 import json
 
 import getTrainInfo as TrainInfo
+
+#
+# Important
+KILL_THREADS = 0
 
 #----------------------------------------------------------------
 # Handle application shutdown
@@ -23,7 +27,10 @@ def cleanExit():
     display.show()
     # Cleanup RPi GPIO
     GPIO.cleanup()
+    global KILL_THREADS
+    KILL_THREADS = 1
     print("Clean exit.")
+    time.sleep(1)
 
 #----------------------------------------------------------------
 # GPIO Layout: https://pinout.xyz/
@@ -114,7 +121,24 @@ def checkTurnout(turnoutNum, turnoutData, pinout, screenTop=0):
         updateDisplay("Turnout[{0}]: Thrown".format(turnoutNum), screenTop)
         rgbLightToggle(pinout, 1)
 
+#----------------------------------------------------------------
+# Threading
 
+def updateTurnouts():
+    while True:
+        draw.rectangle((0, 0, width, height), outline=0, fill=0)
+        turnoutData = TrainInfo.getTurnouts()
+
+        for i in range(4):
+            checkTurnout(i, turnoutData[i], ARD_OUTS[i], i*8)
+
+        if KILL_THREADS == 1:
+            print("Time to end thread.")
+            break
+        else:
+            time.sleep(3)
+    
+listenThread = threading.Thread(target=updateTurnouts)
 #----------------------------------------------------------------
 # Flask app
 
@@ -131,10 +155,10 @@ def hello():
             print("Turn off.", file=sys.stderr)
             lightsOff()
         elif request.form['submit_button'] == '2':
-            draw.rectangle((0, 0, width, height), outline=0, fill=0)
-            turnoutData = TrainInfo.getTurnouts()
-            for i in range(4):
-                checkTurnout(i, turnoutData[i], ARD_OUTS[i], i*8)
+            try:
+                listenThread.start()
+            except:
+                print("Failed to start thread.")
     
     return render_template('index.html')
 
